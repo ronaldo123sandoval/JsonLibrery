@@ -1,0 +1,28 @@
+{
+    "name": "Ronaldo",
+    "age": 21,
+    "country": "Bolivia",
+    "hobbies": [
+        "Football",
+        "Basketball",
+        "Swimming"
+    ],
+    "is_married": false,
+    "school": {
+        "highSchool": "Bolivian High School",
+        "university": "Bolivian University"
+    },
+    "skills": [{
+            "name": "HTML",
+            "level": "beginner"
+        },
+        {
+            "name": "CSS",
+            "level": "beginner"
+        },
+        {
+            "name": "JavaScript",
+            "level": "beginner"
+        }
+    ]
+}

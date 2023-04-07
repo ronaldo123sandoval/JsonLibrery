@@ -68,9 +68,7 @@ Para el constructor "JList", se genera la representación de una lista en format
 
 Adicionalmente, se define una función auxiliar llamada "showNode" que toma un par clave-valor del objeto (representado como una tupla de dos elementos), y genera la representación en formato JSON de la clave y el valor, separados por dos puntos y espacio. Esta función es utilizada en el patrón correspondiente al constructor "JObject" en la función "writeJson".
 
-![Imagen](Image\showNode.PNG)
-
-# Notas de versión y cambios
+![Imagen](.\\Image\showNode.PNG)
 
 # Notas de versión y cambios
 El proyecto originalmente se trabajó en la plataforma de GitLab. Este código pasó por varias versiones mientras se trabajaba en GitLab, antes de ser transferido a GitHub como la versión final. Este código no fue creado en un solo día, sino que requirió varias dias y horas de trabajo.

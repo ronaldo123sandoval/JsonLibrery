@@ -1,7 +1,4 @@
-module JsonObject(JsonValue(..), NodeName) where 
-
-type NodeName = String 
-
+module JsonObject(JsonValue(..)) where 
 data JsonValue = JString String
           | JNumber Double
           | JBool Bool

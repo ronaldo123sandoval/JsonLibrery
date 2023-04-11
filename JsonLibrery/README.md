@@ -19,35 +19,35 @@ La función "fromJson" toma un String como entrada y devuelve un valor "Maybe Js
 El código hace uso de varias funciones auxiliares para analizar y procesar la cadena de texto. Algunas de estas funciones son:
 - **parseJsonValue**: Analiza una cadena de texto y devuelve un valor "Maybe JsonValue". Esta función es recursiva y se encarga de analizar la estructura básica de un JSON, como objetos, listas, strings, booleanos, nulos y números.
 
-![Imagen](Image\parseJsonValue.PNG)
+![Imagen](/JsonLibrery/Image/parseJsonValue.PNG)
 
 - **parseJsonObject**: Analiza una cadena de texto que representa un objeto JSON y devuelve un valor "Maybe JsonValue" del tipo "JObject" que contiene una lista de pares clave-valor.
 
-![Imagen](Image\parseJsonObject.PNG)
+![Imagen](/JsonLibrery/Image/parseJsonObject.PNG)
 
 - **parseJsonArray**: Analiza una cadena de texto que representa una lista JSON y devuelve un valor "Maybe JsonValue" del tipo "JList" que contiene una lista de elementos.
 
-![Imagen](Image\parseJsonArray.PNG)
+![Imagen](/JsonLibrery/Image/parseJsonArray.PNG)
 
 - **trim**: Elimina espacios en blanco innecesarios al principio y al final de una cadena de texto.
 
-![Imagen](Image\trim.PNG)
+![Imagen](/JsonLibrery/Image/trim.PNG)
 
 - **readValueJson**: Recibe una cadena de texto y devuelve un valor "JsonValue" a partir de la función "parseJsonValue". Si no se puede analizar la cadena de texto, se devuelve un valor "JNull".
 
-![Imagen](Image\readValueJson.PNG)
+![Imagen](/JsonLibrery/Image/readValueJson.PNG)
 
 - **parseJsonString**: Analiza una cadena de texto que representa una cadena JSON y devuelve un valor "Maybe JsonValue" del tipo "JString" que contiene la cadena de texto sin procesar.
 
-![Imagen](Image\parseJsonString.PNG)
+![Imagen](/JsonLibrery/Image/parseJsonString.PNG)
 
 - **parseNull**: Analiza una cadena de texto que representa un valor nulo en JSON y devuelve un valor "Maybe JsonValue" del tipo "JNull" si la cadena de texto es igual a "null".
 
-![Imagen](Image\parseNull.PNG)
+![Imagen](/JsonLibrery/Image/parseNull.PNG)
 
 - **parseJsonNumber**: Analiza una cadena de texto que representa un número JSON y devuelve un valor "Maybe JsonValue" del tipo "JNumber" si se puede analizar correctamente. Se realizan algunas verificaciones en la parte entera y decimal del número para asegurarse de que estén en el formato correcto.
 
-![Imagen](Image\parseJsonNumber.PNG)
+![Imagen](/JsonLibrery/Image/parseJsonNumber.PNG)
 
 # JsonWrite
 
@@ -55,7 +55,7 @@ La estructura del código consta de un módulo llamado "JsonWriter" que exporta 
 
 La función "writeJson" tiene un parámetro de entrada de tipo "JsonValue" y devuelve una cadena de caracteres (String). La función utiliza patrones para hacer coincidir el valor de "JsonValue" con los diferentes constructores del tipo de dato "JsonValue" definidos en el módulo "JsonObject", y genera la representación en formato JSON correspondiente para cada caso.
 
-![Imagen](Image\whiteJson.PNG)
+![Imagen](/JsonLibrery/Image/whiteJson.PNG)
 
 Los patrones utilizados son los siguientes:
 
@@ -68,7 +68,7 @@ Para el constructor "JList", se genera la representación de una lista en format
 
 Adicionalmente, se define una función auxiliar llamada "showNode" que toma un par clave-valor del objeto (representado como una tupla de dos elementos), y genera la representación en formato JSON de la clave y el valor, separados por dos puntos y espacio. Esta función es utilizada en el patrón correspondiente al constructor "JObject" en la función "writeJson".
 
-![Imagen](.\\Image\showNode.PNG)
+![Imagen](/JsonLibrery/Image/showNode.PNG)
 
 # Notas de versión y cambios
 El proyecto originalmente se trabajó en la plataforma de GitLab. Este código pasó por varias versiones mientras se trabajaba en GitLab, antes de ser transferido a GitHub como la versión final. Este código no fue creado en un solo día, sino que requirió varias dias y horas de trabajo.

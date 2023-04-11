@@ -1,6 +1,6 @@
 # Json Librery
-> Colaborador: Ronaldo Sandoval Zambrana
 # Documentacion 
+> autor: Ronaldo Sandoval Zambrana
 ## Descripción
 Este módulo Haskell proporciona funciones para la conversión bidireccional entre strings y valores de datos JsonValue. Permite la serialización (codificación) de un string en formato JSON a un valor de datos JsonValue, y la deserialización (decodificación) de un valor de datos JsonValue a un string en formato JSON.
 ## Librerias utilizadas 

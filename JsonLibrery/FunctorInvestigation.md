@@ -32,3 +32,7 @@ map :: (a -> b) -> [a] -> [b]
 - Abstracción y reusabilidad: Puedo abstraer la logica del parseo para poder reutilizarlo 
 - Flexibilidad: Puede implementar una nueva instancia de functor si quiero cambiar la entrada del JsonValue 
 - Codigo  Limpio: Puedo volver el codigo mas limpio
+
+## Concepto de Monad
+- Functors ->  Teorema de categorias
+- Aplicatives -> Teorema de categorias

@@ -27,7 +27,6 @@ library
   exposed-modules:
       JsonBuilder
       JsonBuilderFunctor
-      JsonFunctors
       JsonObject
       JsonWriter
       Lib
@@ -63,6 +62,7 @@ test-suite JsonLibrery-test
   main-is: MainTest.hs
   other-modules:
       TestJsonBuilder
+      TestJsonBuilderFunctor
       TestJsonWhite
       Paths_JsonLibrery
   hs-source-dirs:

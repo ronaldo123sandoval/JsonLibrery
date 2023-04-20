@@ -1,70 +1,71 @@
-module JsonBuilderFunctor (fromJsonBuilderFunctor) where
+module JsonBuilderFunctor (parseToken, JsonToken(..), runJsonParser) where
 
-import Control.Applicative
-import Control.Monad
-import Data.Char (isDigit, isSpace)
+
+import Data.Char (isDigit)
+import Text.Read (readMaybe)
+import GHC.Unicode (isSpace)
 import GHC.Unicode (toLower)
-import JsonObject (JsonValue (..))
+import Control.Applicative (Alternative(..), (<|>))
 
-newtype JsonParser a = JsonParser { runParser :: String -> Maybe (a, String) }
+data JsonToken = TokenNumber Double | TokenString String | TokenBool Bool | TokenNull | TokenList [JsonToken] | TokenObject [(String, JsonToken)] deriving (Show, Eq)
+
+newtype JsonParser a = JsonParser {runJsonParser :: String -> Maybe (a, String)}
 
 instance Functor JsonParser where
-  fmap f (JsonParser p) = JsonParser (\s -> fmap (\(a, s') -> (f a, s')) (p s))
+  fmap f p = JsonParser $ \input -> do
+    (a, rest) <- runJsonParser p input
+    Just (f a, rest)
 
 instance Applicative JsonParser where
-  pure a = JsonParser (\s -> Just (a, s))
-  (JsonParser p1) <*> (JsonParser p2) = JsonParser (\s -> case p1 s of
-    Nothing -> Nothing
-    Just (f, s') -> fmap (\(a, s'') -> (f a, s'')) (p2 s'))
-
-instance Monad JsonParser where
-  return = pure
-  (JsonParser p1) >>= f = JsonParser (\s -> case p1 s of
-    Nothing -> Nothing
-    Just (a, s') -> runParser (f a) s')
+  pure a = JsonParser $ \input -> Just (a, input)
+  (JsonParser f) <*> (JsonParser a) = JsonParser $ \input -> do
+    (func, rest1) <- f input
+    (val, rest2) <- a rest1
+    Just (func val, rest2)
 
 instance Alternative JsonParser where
-  empty = JsonParser (\_  -> Nothing)
-  (JsonParser p1) <|> (JsonParser p2) = JsonParser (\s -> p1 s <|> p2 s)
+  empty = JsonParser $ \_ -> Nothing
+  p1 <|> p2 = JsonParser $ \input ->
+    case runJsonParser p1 input of
+      Nothing -> runJsonParser p2 input
+      Just (a, rest) -> Just (a, rest)
 
-instance MonadPlus JsonParser where
-  mzero = empty
-  mplus = (<|>)
+parseNumber :: JsonParser JsonToken
+parseNumber = JsonParser $ \input ->
+  let (numberStr, rest) = span isDigit input
+  in case readMaybe numberStr of
+    Just number -> Just (TokenNumber number, rest)
+    Nothing -> Nothing
 
-instance MonadFail JsonParser where
-  fail _ = empty
+parseBool :: JsonParser JsonToken
+parseBool = JsonParser $ \input ->
+  let (_, rest1) = span isSpace input
+      (boolStr, rest2) = span (not . isSpace) rest1
+  in if map toLower boolStr == "true"
+      then Just (TokenBool True, rest2)
+      else if map toLower boolStr == "false"
+        then Just (TokenBool False, rest2)
+        else Nothing
 
-fromJsonBuilderFunctor :: String -> Maybe JsonValue
-fromJsonBuilderFunctor s = case runParser parseJsonValue (strip s) of
-  Just (result, _) -> Just result
-  Nothing -> Nothing
+parseNull :: JsonParser JsonToken
+parseNull = JsonParser $ \input ->
+  let (_, rest1) = span isSpace input
+      (nullStr, rest2) = span (not . isSpace) rest1
+  in if nullStr == "null"
+      then Just (TokenNull, rest2)
+      else Nothing
 
-strip :: String -> String
-strip = reverse . dropWhile isSpace . reverse . dropWhile isSpace
+parseString :: JsonParser JsonToken
+parseString = JsonParser $ \input ->
+  let (_, rest1) = span isSpace input
+      (str, rest2) = if head rest1 == '\"'
+                       then span (/= '\"') (tail rest1)
+                       else span (/= '\"') rest1
+  in if head rest2 == '\"'
+       then Just (TokenString str, tail rest2)
+       else Nothing
 
-parseJsonValue :: JsonParser JsonValue
-parseJsonValue = do
-  s <- JsonParser (\s -> Just (strip s, s))
-  case s of
-    "" -> empty
-    _ -> case head s of
-      ' ' -> parseJsonValue
-      '}' -> empty
-      '\"' -> parseJsonString (init (tail s))
-      't' -> if map toLower s == "true" then return (JBool True) else empty
-      'f' -> if map toLower s == "false" then return (JBool False) else empty
-      'n' -> parseNull s
-      _ -> if isDigit (head s) || head s == '-' then parseJsonNumber s else empty
+parseToken :: JsonParser JsonToken
+parseToken = parseNumber <|> parseBool <|> parseNull <|> parseString
 
-parseNull :: String -> JsonParser JsonValue
-parseNull s = if map toLower s == "null" then return JNull else empty
-
-parseJsonNumber :: String -> JsonParser JsonValue
-parseJsonNumber s = do
-  let (number, _) = span (\c -> isDigit c || c == '.') s
-  if number == "" then empty else return (JNumber (read number))
-
-parseJsonString :: String -> JsonParser JsonValue
-parseJsonString s = do
-  let (string, rest) = span (/= '\"') s
-  if rest == "" then empty else return (JString string)
+-- ghci runJsonParser parseToken "[1, 2, 3]"

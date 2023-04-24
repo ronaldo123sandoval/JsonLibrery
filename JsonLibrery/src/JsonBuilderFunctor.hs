@@ -12,11 +12,13 @@ data JsonToken = TokenNumber Double | TokenString String | TokenBool Bool | Toke
 newtype JsonParser a = JsonParser {runJsonParser :: String -> Maybe (a, String)}
 
 instance Functor JsonParser where
-  fmap f p = JsonParser $ \input -> do
-    (a, rest) <- runJsonParser p input
+  fmap :: (a -> b) -> JsonParser a -> JsonParser b
+  fmap f (JsonParser p) = JsonParser $ \input -> do
+    (a, rest) <- p input
     Just (f a, rest)
 
 instance Applicative JsonParser where
+  pure :: a -> JsonParser a
   pure a = JsonParser $ \input -> Just (a, input)
   (<*>) :: JsonParser (a -> b) -> JsonParser a -> JsonParser b
   (JsonParser f) <*> (JsonParser a) = JsonParser $ \input -> do
@@ -31,9 +33,6 @@ instance Alternative JsonParser where
       Nothing -> runJsonParser p2 input
       Just (a, rest) -> Just (a, rest)
 
--- instance Alternative JsonParser where
---   empty = JsonParser (\x -> Nothing)
---   p1 <|> p2 = JsonParser (\)
 parseNumber :: JsonParser JsonToken
 parseNumber = JsonParser $ \input ->
   let (_, rest1) = span isSpace input
@@ -42,45 +41,48 @@ parseNumber = JsonParser $ \input ->
                                         in ('-':n, r)
                           _ -> span isDigit rest1
   in case readMaybe numStr of
-    Nothing -> Nothing
     Just num -> Just (TokenNumber num, rest2)
--- correguir el parse number:
--- runJsonParser parseNumber "123true"  este caso no es valido y tiene que salir Nothing
+    _ -> Nothing
+
 parseBool :: JsonParser JsonToken
 parseBool = JsonParser $ \input ->
   let (_, rest1) = span isSpace input
       (boolStr, rest2) = span (not . isSpace) rest1
-  in if map toLower boolStr == "true"
-      then Just (TokenBool True, rest2)
-      else if map toLower boolStr == "false"
-        then Just (TokenBool False, rest2)
-        else Nothing
+  in case map toLower boolStr of
+    "true" -> Just (TokenBool True, rest2)
+    "false" -> Just (TokenBool False, rest2)
+    _ -> Nothing
+
 
 parseNull :: JsonParser JsonToken
 parseNull = JsonParser $ \input ->
   let (_, rest1) = span isSpace input
       (nullStr, rest2) = span (not . isSpace) rest1
-  in if nullStr == "null"
-      then Just (TokenNull, rest2)
-      else Nothing
+  in case nullStr of
+    "null" -> Just (TokenNull, rest2)
+    _ -> Nothing
+
 
 parseString :: JsonParser JsonToken
 parseString = JsonParser $ \input ->
   let (_, rest1) = span isSpace input
-      (str, rest2) = if head rest1 == '\"'
-                       then span (/= '\"') (tail rest1)
-                       else span (/= '\"') rest1
-  in if head rest2 == '\"'
-       then Just (TokenString str, tail rest2)
-       else Nothing
+      (str, rest2) = case rest1 of
+                       '\"':rest -> span (/= '\"') rest
+                       _         -> span (/= '\"') rest1
+  in case rest2 of
+       '\"':rest -> Just (TokenString str, rest)
+       _         -> Nothing
 
 parseList :: JsonParser JsonToken
 parseList = JsonParser $ \input ->
   let (_, rest1) = span isSpace input
-      (_, rest2) = span (/= ']') (tail rest1)
-  in if head rest2 == ']'
-       then Just (TokenList [], tail rest2)
-       else Nothing
+      (list, rest2) = case rest1 of
+                        '[':rest -> span (/= ']') rest
+                        _        -> span (/= ']') rest1
+  in case rest2 of
+       ']':rest -> Just (TokenList (runJsonParser parseToken list), rest)
+       _        -> Nothing
 
+-- > ghci runJsonParser parseList "[1,true,false,null,\"string\",[1,2,3],{age: 20, name: \"John\"}}]" 
 parseToken :: JsonParser JsonToken
-parseToken = parseNumber <|> parseBool <|> parseNull <|> parseString <|> parseList
+parseToken = parseString <|> parseNumber <|> parseBool <|> parseNull <|> parseList 

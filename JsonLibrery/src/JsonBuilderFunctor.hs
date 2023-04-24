@@ -18,6 +18,7 @@ instance Functor JsonParser where
 
 instance Applicative JsonParser where
   pure a = JsonParser $ \input -> Just (a, input)
+  (<*>) :: JsonParser (a -> b) -> JsonParser a -> JsonParser b
   (JsonParser f) <*> (JsonParser a) = JsonParser $ \input -> do
     (func, rest1) <- f input
     (val, rest2) <- a rest1
@@ -30,13 +31,21 @@ instance Alternative JsonParser where
       Nothing -> runJsonParser p2 input
       Just (a, rest) -> Just (a, rest)
 
+-- instance Alternative JsonParser where
+--   empty = JsonParser (\x -> Nothing)
+--   p1 <|> p2 = JsonParser (\)
 parseNumber :: JsonParser JsonToken
 parseNumber = JsonParser $ \input ->
-  let (numberStr, rest) = span isDigit input
-  in case readMaybe numberStr of
-    Just number -> Just (TokenNumber number, rest)
+  let (_, rest1) = span isSpace input
+      (numStr, rest2) = case rest1 of
+                          ('-':rest) -> let (n, r) = span isDigit rest
+                                        in ('-':n, r)
+                          _ -> span isDigit rest1
+  in case readMaybe numStr of
     Nothing -> Nothing
-
+    Just num -> Just (TokenNumber num, rest2)
+-- correguir el parse number:
+-- runJsonParser parseNumber "123true"  este caso no es valido y tiene que salir Nothing
 parseBool :: JsonParser JsonToken
 parseBool = JsonParser $ \input ->
   let (_, rest1) = span isSpace input
@@ -65,7 +74,13 @@ parseString = JsonParser $ \input ->
        then Just (TokenString str, tail rest2)
        else Nothing
 
-parseToken :: JsonParser JsonToken
-parseToken = parseNumber <|> parseBool <|> parseNull <|> parseString
+parseList :: JsonParser JsonToken
+parseList = JsonParser $ \input ->
+  let (_, rest1) = span isSpace input
+      (_, rest2) = span (/= ']') (tail rest1)
+  in if head rest2 == ']'
+       then Just (TokenList [], tail rest2)
+       else Nothing
 
--- ghci runJsonParser parseToken "[1, 2, 3]"
+parseToken :: JsonParser JsonToken
+parseToken = parseNumber <|> parseBool <|> parseNull <|> parseString <|> parseList

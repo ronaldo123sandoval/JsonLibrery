@@ -73,15 +73,28 @@ parseString = JsonParser $ \input ->
        '\"':rest -> Just (TokenString str, rest)
        _         -> Nothing
 
+
 parseList :: JsonParser JsonToken
 parseList = JsonParser $ \input ->
   let (_, rest1) = span isSpace input
       (list, rest2) = case rest1 of
                         '[':rest -> span (/= ']') rest
                         _        -> span (/= ']') rest1
+      tokens = sepBy parseToken "," list
   in case rest2 of
-       ']':rest -> Just (TokenList (runJsonParser parseToken list), rest)
+       ']':rest -> Just (TokenList tokens, rest)
        _        -> Nothing
+
+sepBy :: JsonParser a -> String -> String -> [a]
+sepBy p sep input =
+  let (first, rest) = span (/= head sep) input
+      remaining = dropWhile (== head sep) rest
+  in case runJsonParser p first of
+       Nothing -> []
+       Just (x, _) ->
+         if null remaining
+         then [x]
+         else x : sepBy p sep remaining
 
 -- > ghci runJsonParser parseList "[1,true,false,null,\"string\",[1,2,3],{age: 20, name: \"John\"}}]" 
 parseToken :: JsonParser JsonToken

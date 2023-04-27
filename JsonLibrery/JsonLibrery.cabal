@@ -29,17 +29,15 @@ library
       JsonBuilderFunctor
       JsonObject
       JsonWriter
-      Lib
   other-modules:
       Paths_JsonLibrery
   hs-source-dirs:
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      HUnit
-    , aeson
-    , base >=4.7 && <5
+      base >=4.7 && <5
     , tasty
+    , tasty-hunit
   default-language: Haskell2010
 
 executable JsonLibrery-exe
@@ -50,11 +48,11 @@ executable JsonLibrery-exe
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      HUnit
-    , JsonLibrery
+      JsonLibrery
     , aeson
     , base >=4.7 && <5
     , tasty
+    , tasty-hunit
   default-language: Haskell2010
 
 test-suite JsonLibrery-test
@@ -69,8 +67,7 @@ test-suite JsonLibrery-test
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      HUnit
-    , JsonLibrery
+      JsonLibrery
     , aeson
     , base >=4.7 && <5
     , tasty

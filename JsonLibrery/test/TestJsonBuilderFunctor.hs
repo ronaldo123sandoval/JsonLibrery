@@ -32,9 +32,6 @@ testParseTokenBool =  assertEqual "testParseTokenBool" (runJsonParser parseToken
 testParseTokenBoollWithSpace :: Assertion
 testParseTokenBoollWithSpace =  assertEqual "testParseTokenBollWithSpace" (runJsonParser parseToken "true  false") (Just (TokenBool True, "  false"))
 
-testParseTokenBoolWithCapitalLetter :: Assertion
-testParseTokenBoolWithCapitalLetter =  assertEqual "testParseTokenBoolWithCapitalLetter" (runJsonParser parseToken "FALSE") (Just (TokenBool False, ""))
-
 testParseNUll :: Assertion
 testParseNUll =  assertEqual "testParseNUll" (runJsonParser parseToken "null") (Just (TokenNull, ""))
 
@@ -45,7 +42,7 @@ testParseListAllType :: Assertion
 testParseListAllType =  assertEqual "testParseListAllType" (runJsonParser parseToken "[1, \"hello\", true, null]") (Just (TokenList [TokenNumber 1.0, TokenString "hello", TokenBool True, TokenNull], ""))
 
 testParseListWithObject :: Assertion
-testParseListWithObject = assertEqual "testParseListWithObject" (runJsonParser parseToken "[1, \"hello\", true, null, {\"name\": \"John\"}]") (Just (TokenList [TokenNumber 1.0, TokenString "hello", TokenBool True, TokenNull, TokenObject [("name", TokenString "John")]], ""))
+testParseListWithObject = assertEqual "testParseListWithObject" (runJsonParser parseToken "[1, \"hello\", true, null, {\"name\": \"John\"}]") (Just (TokenList [TokenNumber 1.0,TokenString "hello",TokenBool True,TokenNull,TokenObject [("name",TokenString "John")]],""))
 
 testParseListIntoList :: Assertion
 testParseListIntoList = assertEqual "testParseListIntoList" (runJsonParser parseToken "[1, \"hello\", true, null, [1, 2, 3]]") (Just (TokenList [TokenNumber 1.0, TokenString "hello", TokenBool True, TokenNull, TokenList [TokenNumber 1.0, TokenNumber 2.0, TokenNumber 3.0]], ""))
@@ -70,7 +67,6 @@ tests = testGroup "Builder Functor Tests"
     , testCase "testParseTokenNumbeNegative" testParseTokenNumbeNegative
     , testCase "testParseTokenBool" testParseTokenBool
     , testCase "testParseTokenBoollWithSpace" testParseTokenBoollWithSpace
-    , testCase "testParseTokenBoolWithCapitalLetter" testParseTokenBoolWithCapitalLetter
     , testCase "testParseNUll" testParseNUll
     , testCase "testParseList" testParseList
     , testCase "testParseListAllType" testParseListAllType

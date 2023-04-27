@@ -1,5 +1,4 @@
 module JsonBuilderFunctor (parseToken, JsonToken (..), runJsonParser) where
-
 import Control.Applicative
 import Data.Char (isDigit)
 import GHC.Unicode (isSpace)
@@ -17,16 +16,13 @@ data JsonToken
 newtype JsonParser a = JsonParser {runJsonParser :: String -> Maybe (a, String)}
 
 instance Functor JsonParser where
-  fmap :: (a -> b) -> JsonParser a -> JsonParser b
   fmap f (JsonParser p) = JsonParser $ \input -> do
     (a, rest) <- p input
     Just (f a, rest)
 
 instance Applicative JsonParser where
-  pure :: a -> JsonParser a
   pure a = JsonParser $ \input -> Just (a, input)
-  (<*>) :: JsonParser (a -> b) -> JsonParser a -> JsonParser b
-  (JsonParser f) <*> (JsonParser a) = JsonParser $ \input -> do
+  (<*>) (JsonParser f) (JsonParser a) = JsonParser $ \input -> do
     (func, rest1) <- f input
     (val, rest2) <- a rest1
     Just (func val, rest2)
@@ -90,11 +86,53 @@ parseListAux = JsonParser $ \input ->
                 Nothing -> Nothing
             Just (token, rest2) ->
               case rest2 of
-                ',' : rest3 -> Just ([token], rest3)
                 ']' : rest3 -> Just ([token], rest3)
                 _ -> Nothing
             Nothing -> Nothing
 
--- > ghci runJsonParser parseList "[1,true,false,null,\"string\",[1,2,3],{age: 20, name: \"John\"}}]"
+parseObject :: JsonParser JsonToken
+parseObject = JsonParser $ \input ->
+  case skipSpaces input of
+    '{' : rest1 ->
+      case runJsonParser parseObjectAux rest1 of
+        Just (obj, rest2) -> Just (TokenObject obj, rest2)
+        Nothing -> Nothing
+    _ -> Nothing
+
+parseObjectAux :: JsonParser [(String, JsonToken)]
+parseObjectAux = JsonParser $ \input ->
+  case skipSpaces input of
+    '}' : rest -> Just ([], rest)
+    _ ->
+      case runJsonParser parsePair input of
+        Just ((key, value), ',' : rest1) ->
+          case runJsonParser parseObjectAux rest1 of
+            Just (obj, rest2) -> Just ((key, value) : obj, rest2)
+            Nothing -> Nothing
+        Just ((key, value), rest1) ->
+          case rest1 of
+            '}' : rest2 -> Just ([(key, value)], rest2)
+            _ -> Nothing
+        Nothing -> Nothing
+
+parsePair :: JsonParser (String, JsonToken)
+parsePair = JsonParser $ \input ->
+  let (_, rest1) = span isSpace input
+   in case rest1 of
+        '"' : rest2 ->
+          let (str, rest3) = span (/= '"') rest2
+           in case rest3 of
+                '"' : ':' : rest4 ->
+                  let (_, rest5) = span isSpace rest4
+                   in case runJsonParser parseToken rest5 of
+                        Just (token, rest6) -> Just ((str, token), rest6)
+                        Nothing -> Nothing
+                _ -> Nothing
+        _ -> Nothing
+
+
+skipSpaces :: String -> String
+skipSpaces = dropWhile isSpace
+
 parseToken :: JsonParser JsonToken
-parseToken = parseString <|> parseNumber <|> parseBool <|> parseNull <|> parseList 
+parseToken = parseString <|> parseNumber <|> parseBool <|> parseNull <|> parseList <|> parseObject

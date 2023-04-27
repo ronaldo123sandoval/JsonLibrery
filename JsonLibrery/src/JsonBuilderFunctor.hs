@@ -1,13 +1,18 @@
-module JsonBuilderFunctor (parseToken, JsonToken(..), runJsonParser) where
+module JsonBuilderFunctor (parseToken, JsonToken (..), runJsonParser) where
 
-
+import Control.Applicative
 import Data.Char (isDigit)
-import Text.Read (readMaybe)
 import GHC.Unicode (isSpace)
-import GHC.Unicode (toLower)
-import Control.Applicative (Alternative(..), (<|>))
+import Text.Read (readMaybe)
 
-data JsonToken = TokenNumber Double | TokenString String | TokenBool Bool | TokenNull | TokenList [JsonToken] | TokenObject [(String, JsonToken)] deriving (Show, Eq)
+data JsonToken
+  = TokenNumber Double
+  | TokenString String
+  | TokenBool Bool
+  | TokenNull
+  | TokenList [JsonToken]
+  | TokenObject [(String, JsonToken)]
+  deriving (Show, Eq)
 
 newtype JsonParser a = JsonParser {runJsonParser :: String -> Maybe (a, String)}
 
@@ -35,67 +40,61 @@ instance Alternative JsonParser where
 
 parseNumber :: JsonParser JsonToken
 parseNumber = JsonParser $ \input ->
-  let (_, rest1) = span isSpace input
-      (numStr, rest2) = case rest1 of
-                          ('-':rest) -> let (n, r) = span isDigit rest
-                                        in ('-':n, r)
-                          _ -> span isDigit rest1
-  in case readMaybe numStr of
-    Just num -> Just (TokenNumber num, rest2)
-    _ -> Nothing
+  let (numStr, rest) = span (\c -> isDigit c || c == '.' || c == '-') input
+   in case readMaybe numStr of
+        Just num -> Just (TokenNumber num, rest)
+        Nothing -> Nothing
 
 parseBool :: JsonParser JsonToken
 parseBool = JsonParser $ \input ->
-  let (_, rest1) = span isSpace input
-      (boolStr, rest2) = span (not . isSpace) rest1
-  in case map toLower boolStr of
-    "true" -> Just (TokenBool True, rest2)
-    "false" -> Just (TokenBool False, rest2)
+  case input of
+    't' : 'r' : 'u' : 'e' : rest -> Just (TokenBool True, rest)
+    'f' : 'a' : 'l' : 's' : 'e' : rest -> Just (TokenBool False, rest)
     _ -> Nothing
-
 
 parseNull :: JsonParser JsonToken
 parseNull = JsonParser $ \input ->
-  let (_, rest1) = span isSpace input
-      (nullStr, rest2) = span (not . isSpace) rest1
-  in case nullStr of
-    "null" -> Just (TokenNull, rest2)
+  case input of
+    'n' : 'u' : 'l' : 'l' : rest -> Just (TokenNull, rest)
     _ -> Nothing
-
 
 parseString :: JsonParser JsonToken
 parseString = JsonParser $ \input ->
   let (_, rest1) = span isSpace input
-      (str, rest2) = case rest1 of
-                       '\"':rest -> span (/= '\"') rest
-                       _         -> span (/= '\"') rest1
-  in case rest2 of
-       '\"':rest -> Just (TokenString str, rest)
-       _         -> Nothing
-
+   in case rest1 of
+        '"' : rest ->
+          let (str, rest2) = span (/= '"') rest
+           in Just (TokenString str, tail rest2)
+        _ -> Nothing
 
 parseList :: JsonParser JsonToken
 parseList = JsonParser $ \input ->
   let (_, rest1) = span isSpace input
-      (list, rest2) = case rest1 of
-                        '[':rest -> span (/= ']') rest
-                        _        -> span (/= ']') rest1
-      tokens = sepBy parseToken "," list
-  in case rest2 of
-       ']':rest -> Just (TokenList tokens, rest)
-       _        -> Nothing
+   in case rest1 of
+        '[' : rest2 ->
+          case runJsonParser parseListAux rest2 of
+            Just (list, rest3) -> Just (TokenList list, rest3)
+            Nothing -> Nothing
+        _ -> Nothing
 
-sepBy :: JsonParser a -> String -> String -> [a]
-sepBy p sep input =
-  let (first, rest) = span (/= head sep) input
-      remaining = dropWhile (== head sep) rest
-  in case runJsonParser p first of
-       Nothing -> []
-       Just (x, _) ->
-         if null remaining
-         then [x]
-         else x : sepBy p sep remaining
+parseListAux :: JsonParser [JsonToken]
+parseListAux = JsonParser $ \input ->
+  let (_, rest1) = span isSpace input
+   in case rest1 of
+        ']' : rest -> Just ([], rest)
+        _ ->
+          case runJsonParser parseToken rest1 of
+            Just (token, ',' : rest2) ->
+              case runJsonParser parseListAux rest2 of
+                Just (list, rest3) -> Just (token : list, rest3)
+                Nothing -> Nothing
+            Just (token, rest2) ->
+              case rest2 of
+                ',' : rest3 -> Just ([token], rest3)
+                ']' : rest3 -> Just ([token], rest3)
+                _ -> Nothing
+            Nothing -> Nothing
 
--- > ghci runJsonParser parseList "[1,true,false,null,\"string\",[1,2,3],{age: 20, name: \"John\"}}]" 
+-- > ghci runJsonParser parseList "[1,true,false,null,\"string\",[1,2,3],{age: 20, name: \"John\"}}]"
 parseToken :: JsonParser JsonToken
 parseToken = parseString <|> parseNumber <|> parseBool <|> parseNull <|> parseList 

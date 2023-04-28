@@ -70,11 +70,30 @@ Adicionalmente, se define una función auxiliar llamada "showNode" que toma un p
 
 ![Imagen](/JsonLibrery/Image/showNode.PNG)
 
+# Functor Parse
+
+- **newtype**:Define un nuevo tipo de datos JsonParser. runJsonParser es una función que toma una cadena de entrada y devuelve un valor de tipo Maybe que contiene una tupla que consta de un valor de tipo a y la parte restante de la cadena de entrada.
+
+![Imagen](/JsonLibrery/Image/newType.PNG)
+
+- **Functor**:La instancia Functor permite aplicar una función sobre el resultado de un parser. En esta implementación, se toma un parser JsonParser p y se aplica la función f sobre el resultado obtenido por p. La función fmap devuelve un nuevo parser JsonParser que ejecuta el parser p y aplica la función f sobre su resultado.
+
+![Imagen](/JsonLibrery/Image/functor.PNG)
+
+- **Applicative**:La instancia Applicative permite aplicar una función que se encuentra dentro de un parser a un valor que se encuentra dentro de otro parser. En esta implementación, la función pure crea un nuevo parser que simplemente devuelve el valor pasado como argumento sin procesar la entrada. La función <*> toma dos parsers que contienen una función y un valor, respectivamente, y los ejecuta en secuencia, aplicando la función al valor y devolviendo el resultado.
+
+![Imagen](/JsonLibrery/Image/applicative.PNG)
+
+- **Alternative**:La instancia Alternative define una elección entre dos parsers, es decir, un parser que puede ser uno u otro. La función empty define el parser vacío, que siempre falla sin procesar la entrada. La función <|> toma dos parsers y ejecuta el primero. Si tiene éxito, devuelve su resultado. Si falla, ejecuta el segundo parser y devuelve su resultado.
+
+![Imagen](/JsonLibrery/Image/alternative.PNG)
+
+
 # Notas de versión y cambios
 El proyecto originalmente se trabajó en la plataforma de GitLab. Este código pasó por varias versiones mientras se trabajaba en GitLab, antes de ser transferido a GitHub como la versión final. Este código no fue creado en un solo día, sino que requirió varias dias y horas de trabajo.
 
 En cada versión se tuvieron en cuenta varios casos diferentes que el string de entrada podría tener, para luego convertirlos en valores JSON.
 
 ``` 
-Notas: Actualmente, el archivo "Main.hs" presenta un error que genera barras invertidas "\" adicionales al imprimir el resultado. Este error se corregirá en futuras implementaciones de functors. El programa se ejecuta correctamente en GHCi y se han realizado varios tests para contemplar diferentes casos en el código.
+Notas:Se han realizado varios tests para contemplar diferentes casos en el código.
 ```

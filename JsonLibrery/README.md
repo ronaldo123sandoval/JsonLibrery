@@ -74,19 +74,19 @@ Adicionalmente, se define una función auxiliar llamada "showNode" que toma un p
 
 - **newtype**:Define un nuevo tipo de datos JsonParser. runJsonParser es una función que toma una cadena de entrada y devuelve un valor de tipo Maybe que contiene una tupla que consta de un valor de tipo a y la parte restante de la cadena de entrada.
 
-![Imagen](/JsonLibrery/Image/newType.PNG)
+![Imagen](/JsonLibrery/Image/newType.png)
 
 - **Functor**:La instancia Functor permite aplicar una función sobre el resultado de un parser. En esta implementación, se toma un parser JsonParser p y se aplica la función f sobre el resultado obtenido por p. La función fmap devuelve un nuevo parser JsonParser que ejecuta el parser p y aplica la función f sobre su resultado.
 
-![Imagen](/JsonLibrery/Image/functor.PNG)
+![Imagen](/JsonLibrery/Image/functor.png)
 
 - **Applicative**:La instancia Applicative permite aplicar una función que se encuentra dentro de un parser a un valor que se encuentra dentro de otro parser. En esta implementación, la función pure crea un nuevo parser que simplemente devuelve el valor pasado como argumento sin procesar la entrada. La función <*> toma dos parsers que contienen una función y un valor, respectivamente, y los ejecuta en secuencia, aplicando la función al valor y devolviendo el resultado.
 
-![Imagen](/JsonLibrery/Image/applicative.PNG)
+![Imagen](/JsonLibrery/Image/applicative.png)
 
 - **Alternative**:La instancia Alternative define una elección entre dos parsers, es decir, un parser que puede ser uno u otro. La función empty define el parser vacío, que siempre falla sin procesar la entrada. La función <|> toma dos parsers y ejecuta el primero. Si tiene éxito, devuelve su resultado. Si falla, ejecuta el segundo parser y devuelve su resultado.
 
-![Imagen](/JsonLibrery/Image/alternative.PNG)
+![Imagen](/JsonLibrery/Image/alternative.png)
 
 
 # Notas de versión y cambios
